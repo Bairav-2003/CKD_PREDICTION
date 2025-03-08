@@ -111,8 +111,10 @@ accuracy_score(y_test,y_pred)
 
 ## Output
 
-![project 1](https://github.com/user-attachments/assets/056cea87-e3d3-4d39-907d-9243608b86a3)
+![project 1](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/xboostout1.png)
 
+
+![project 1](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/xboostout1.png)
 
 
 ## Result
