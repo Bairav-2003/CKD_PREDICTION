@@ -106,6 +106,18 @@ y_pred=classifier.predict(X_test)
 from sklearn.metrics import confusion_matrix,accuracy_score
 confusion_matrix(y_test,y_pred)
 accuracy_score(y_test,y_pred)
+print("\nClassification Report:\n")
+print(classification_report(y_test, y_pred))
+ckd_counts = kidney['class'].value_counts()
+
+# Plot the distribution
+plt.figure(figsize=(8, 6))
+ckd_counts.plot(kind='bar', color=['blue', 'green'])
+plt.title('Distribution of Patients: Damaged Cells vs Non-Damaged Cells')
+plt.xlabel('Condition')
+plt.ylabel('Number of Patients')
+plt.xticks(ticks=range(len(ckd_counts.index)), labels=['Non-Damaged Cells (Healthy)', 'Damaged Cells (CKD)'], rotation=0)
+plt.show()
 ```
 
 
