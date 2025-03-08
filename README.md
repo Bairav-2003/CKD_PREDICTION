@@ -116,7 +116,7 @@ accuracy_score(y_test,y_pred)
 
 ## Result
 
-We developed a machine learning model that have acheived 96.3 % accuracy using Decision Tree Classifier algorithm and also distribute the damaged and undamaged cells by visualzation graph using python.
+We developed a machine learning model that have acheived 98% accuracy using xboost algorithm and also distribute the damaged and undamaged cells by visualzation graph using python.
 
 
 
