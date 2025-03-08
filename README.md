@@ -4,55 +4,115 @@
 ## Code
 
 ```py
-import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score, classification_report
+import pandas as pd
 import matplotlib.pyplot as plt
+%matplotlib inline
+import seaborn as sns
 
-df = pd.read_csv("kidney_disease.csv")
+kidney=pd.read_csv('kidney_disease.csv')
+kidney.shape
+kidney.head()
+kidney.info()
+kidney.describe()
 
-df.columns = ['id','age', 'bp', 'sg', 'al', 'su', 'rbc', 'pc', 'pcc', 'ba', 'bgr', 'bu', 'sc', 'sod', 'pot', 'hemo',
-              'pcv', 'wc', 'rc', 'htn', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification']
+columns=pd.read_csv("data_description.txt",sep='-')
+columns=columns.reset_index()
+columns.columns=['cols','abb_col_names']
+kidney.columns=columns['abb_col_names'].values
 
-df.replace('?', np.nan, inplace=True)
-df.dropna(inplace=True)
+def convert_dtype(kidney,feature):
+    kidney[feature]=pd.to_numeric(kidney[feature],errors='coerce')
 
-cat_cols = ['rbc', 'pc', 'pcc', 'ba', 'htn', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification']
-for col in cat_cols:
-    df[col] = pd.Categorical(df[col]).codes
-X = df.drop(columns='classification')
+features=['packed cell volume','white blood cell count','red blood cell count']
+for i in features:
+    convert_dtype(kidney,i)
 
-y = df['classification']
+kidney.drop('id',inplace=True,axis=1)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+def extract_cat_num(kidney):
+    cat_col=[col for col in kidney.columns if kidney[col].dtype=='O']
+    num_col=[col for col in kidney.columns if kidney[col].dtype!='O']
+    return cat_col,num_col
 
-model = DecisionTreeClassifier()
-model.fit(X_train, y_train)
-y_pred = model.predict(X_test)
+cat_col,num_col=extract_cat_num(kidney)
 
-accuracy = accuracy_score(y_test, y_pred)
-print(f"Model Accuracy: {accuracy * 96.3:.2f}%")
-print("\nClassification Report:\n")
-print(classification_report(y_test, y_pred))
-ckd_counts = df['classification'].value_counts()
+kidney['diabetes mellitus'].replace(to_replace={'\tno':'no','\tyes':'yes'},inplace=True)
+kidney['coronary artery disease'].replace(to_replace={'\tno':'no'},inplace=True)
+kidney['class'].replace(to_replace={'ckd\t':'ckd'},inplace=True)
 
-plt.figure(figsize=(8, 6))
-ckd_counts.plot(kind='bar', color=['blue', 'green'])
-plt.title('Distribution of Patients: Damaged Cells vs Non-Damaged Cells')
-plt.ylabel('Number of Patients')
-plt.xticks([0, 1], ['Non-Damaged Cells (Healthy)', 'Damaged Cells (CKD)'], rotation=0)
+plt.figure(figsize=(30,30))
+for i,feature in enumerate(num_col):
+    plt.subplot(5,3,i+1)
+    kidney[feature].hist()
+    plt.title(feature)
+
+plt.figure(figsize=(20, 20))
+for i, feature in enumerate(cat_col):
+    plt.subplot(4, 3, i + 1)
+    sns.countplot(x=kidney[feature])
+plt.tight_layout()
 plt.show()
 
-```
+plt.figure(figsize=(20, 20))
+for i, feature in enumerate(cat_col):
+    plt.subplot(4, 3, i + 1)
+    sns.countplot(x=kidney[feature], hue=kidney['class'])
+plt.tight_layout()
+plt.show()
+
+sns.countplot(x=kidney['class'])  
+plt.show()
+
+corr_matrix = kidney.corr(numeric_only=True)
+plt.figure(figsize=(12, 12))
+sns.heatmap(corr_matrix, annot=True, cmap="BuPu", cbar=True, linewidths=0.5, fmt=".3f")
+
+kidney.isnull().sum()
+for i in num_col:
+    kidney[i].fillna(kidney[i].median(),inplace=True)
+kidney.isnull().sum()
+
+from sklearn.preprocessing import LabelEncoder
+le=LabelEncoder()
+for col in cat_col:
+    kidney[col]=le.fit_transform(kidney[col])
+
+from sklearn.feature_selection import SelectKBest, chi2
+ind_col=[col for col in kidney.columns if col!='class']
+dep_col='class'
+X=kidney[ind_col]
+y=kidney[dep_col]
+
+imp_features=SelectKBest(score_func=chi2,k=20)
+imp_features=imp_features.fit(X,y)
+features_rank=pd.DataFrame({'features': X.columns, 'score': imp_features.scores_})
+selected=features_rank.nlargest(10,'score')['features'].values
+X_new=kidney[selected]
+
+from sklearn.model_selection import train_test_split
+X_train,X_test,y_train,y_test=train_test_split(X_new,y,random_state=0,test_size=0.3)
+
+from xgboost import XGBClassifier
+params={'learning-rate':[0,0.5,0.20,0.25],'max_depth':[5,8,10],'min_child_weight':[1,3,5,7],'gamma':[0.0,0.1,0.2,0.4],'colsample_bytree':[0.3,0.4,0.7]}
+from sklearn.model_selection import RandomizedSearchCV
+classifier=XGBClassifier()
+random_search=RandomizedSearchCV(classifier,param_distributions=params,n_iter=5,scoring='roc_auc',n_jobs=-1,cv=5,verbose=3)
+random_search.fit(X_train,y_train)
+classifier=random_search.best_estimator_
+classifier.fit(X_train,y_train)
+y_pred=classifier.predict(X_test)
+
+from sklearn.metrics import confusion_matrix,accuracy_score
+confusion_matrix(y_test,y_pred)
+accuracy_score(y_test,y_pred)
+
 
 ## Output
 
 ![project 1](https://github.com/user-attachments/assets/056cea87-e3d3-4d39-907d-9243608b86a3)
 
 
-![project 2](https://github.com/user-attachments/assets/96ad031b-bd89-415c-9bff-af04b5e40a9d)
 
 ## Result
 
