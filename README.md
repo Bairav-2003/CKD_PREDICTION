@@ -8,116 +8,167 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 %matplotlib inline
+
+# For Filtering the warnings
+import warnings
+warnings.filterwarnings('ignore')
+
+data = pd.read_csv('kidney_disease.csv')
+
+data.head()
+
+data.info()
+
+data.classification.unique()
+
+data.classification=data.classification.replace("ckd\t","ckd") 
+
+data.classification.unique()
+
+data.drop('id', axis = 1, inplace = True)
+
+data.head()
+
+data['classification'] = data['classification'].replace(['ckd','notckd'], [1,0])
+
+data.head()
+
+data.isnull().sum()
+
+df = data.dropna(axis = 0)
+print(f"Before dropping all NaN values: {data.shape}")
+print(f"After dropping all NaN values: {df.shape}")
+
+df.head()
+
+df.index = range(0,len(df),1)
+df.head()
+
+for i in df['wc']:
+    print(i)
+
+df['wc']=df['wc'].replace(["\t6200","\t8400"],[6200,8400])
+
+for i in df['wc']:
+    print(i)
+
+df.info()
+
+df['pcv']=df['pcv'].astype(int)
+df['wc']=df['wc'].astype(int)
+df['rc']=df['rc'].astype(float)
+df.info()
+
+object_dtypes = df.select_dtypes(include = 'object')
+object_dtypes.head()
+
+dictonary = {
+        "rbc": {
+        "abnormal":1,
+        "normal": 0,
+    },
+        "pc":{
+        "abnormal":1,
+        "normal": 0,
+    },
+        "pcc":{
+        "present":1,
+        "notpresent":0,
+    },
+        "ba":{
+        "notpresent":0,
+        "present": 1,
+    },
+        "htn":{
+        "yes":1,
+        "no": 0,
+    },
+        "dm":{
+        "yes":1,
+        "no":0,
+    },
+        "cad":{
+        "yes":1,
+        "no": 0,
+    },
+        "appet":{
+        "good":1,
+        "poor": 0,
+    },
+        "pe":{
+        "yes":1,
+        "no":0,
+    },
+        "ane":{
+        "yes":1,
+        "no":0,
+    }
+}
+
+df=df.replace(dictonary)
+
+df.head()
+
 import seaborn as sns
+plt.figure(figsize = (20,20))
+sns.heatmap(df.corr(), annot = True, fmt=".2f",linewidths=0.5)
 
-kidney=pd.read_csv('kidney_disease.csv')
-kidney.shape
-kidney.head()
-kidney.info()
-kidney.describe()
+df.corr()
 
-columns=pd.read_csv("data_description.txt",sep='-')
-columns=columns.reset_index()
-columns.columns=['cols','abb_col_names']
-kidney.columns=columns['abb_col_names'].values
+X = df.drop(['classification', 'sg', 'appet', 'rc', 'pcv', 'hemo', 'sod'], axis = 1)
+y = df['classification']
 
-def convert_dtype(kidney,feature):
-    kidney[feature]=pd.to_numeric(kidney[feature],errors='coerce')
-
-features=['packed cell volume','white blood cell count','red blood cell count']
-for i in features:
-    convert_dtype(kidney,i)
-
-kidney.drop('id',inplace=True,axis=1)
-
-def extract_cat_num(kidney):
-    cat_col=[col for col in kidney.columns if kidney[col].dtype=='O']
-    num_col=[col for col in kidney.columns if kidney[col].dtype!='O']
-    return cat_col,num_col
-
-cat_col,num_col=extract_cat_num(kidney)
-
-kidney['diabetes mellitus'].replace(to_replace={'\tno':'no','\tyes':'yes'},inplace=True)
-kidney['coronary artery disease'].replace(to_replace={'\tno':'no'},inplace=True)
-kidney['class'].replace(to_replace={'ckd\t':'ckd'},inplace=True)
-
-plt.figure(figsize=(30,30))
-for i,feature in enumerate(num_col):
-    plt.subplot(5,3,i+1)
-    kidney[feature].hist()
-    plt.title(feature)
-
-plt.figure(figsize=(20, 20))
-for i, feature in enumerate(cat_col):
-    plt.subplot(4, 3, i + 1)
-    sns.countplot(x=kidney[feature])
-plt.tight_layout()
-plt.show()
-
-plt.figure(figsize=(20, 20))
-for i, feature in enumerate(cat_col):
-    plt.subplot(4, 3, i + 1)
-    sns.countplot(x=kidney[feature], hue=kidney['class'])
-plt.tight_layout()
-plt.show()
-
-sns.countplot(x=kidney['class'])  
-plt.show()
-
-corr_matrix = kidney.corr(numeric_only=True)
-plt.figure(figsize=(12, 12))
-sns.heatmap(corr_matrix, annot=True, cmap="BuPu", cbar=True, linewidths=0.5, fmt=".3f")
-
-kidney.isnull().sum()
-for i in num_col:
-    kidney[i].fillna(kidney[i].median(),inplace=True)
-kidney.isnull().sum()
-
-from sklearn.preprocessing import LabelEncoder
-le=LabelEncoder()
-for col in cat_col:
-    kidney[col]=le.fit_transform(kidney[col])
-
-from sklearn.feature_selection import SelectKBest, chi2
-ind_col=[col for col in kidney.columns if col!='class']
-dep_col='class'
-X=kidney[ind_col]
-y=kidney[dep_col]
-
-imp_features=SelectKBest(score_func=chi2,k=20)
-imp_features=imp_features.fit(X,y)
-features_rank=pd.DataFrame({'features': X.columns, 'score': imp_features.scores_})
-selected=features_rank.nlargest(10,'score')['features'].values
-X_new=kidney[selected]
+X.columns
 
 from sklearn.model_selection import train_test_split
-X_train,X_test,y_train,y_test=train_test_split(X_new,y,random_state=0,test_size=0.3)
 
-from xgboost import XGBClassifier
-params={'learning-rate':[0,0.5,0.20,0.25],'max_depth':[5,8,10],'min_child_weight':[1,3,5,7],'gamma':[0.0,0.1,0.2,0.4],'colsample_bytree':[0.3,0.4,0.7]}
-from sklearn.model_selection import RandomizedSearchCV
-classifier=XGBClassifier()
-random_search=RandomizedSearchCV(classifier,param_distributions=params,n_iter=5,scoring='roc_auc',n_jobs=-1,cv=5,verbose=3)
-random_search.fit(X_train,y_train)
-classifier=random_search.best_estimator_
-classifier.fit(X_train,y_train)
-y_pred=classifier.predict(X_test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42)
 
-from sklearn.metrics import confusion_matrix,accuracy_score
-confusion_matrix(y_test,y_pred)
-accuracy_score(y_test,y_pred)
-print("\nClassification Report:\n")
-print(classification_report(y_test, y_pred))
-ckd_counts = kidney['class'].value_counts()
+from sklearn.ensemble import RandomForestClassifier
 
-# Plot the distribution
-plt.figure(figsize=(8, 6))
-ckd_counts.plot(kind='bar', color=['blue', 'green'])
-plt.title('Distribution of Patients: Damaged Cells vs Non-Damaged Cells')
-plt.xlabel('Condition')
-plt.ylabel('Number of Patients')
-plt.xticks(ticks=range(len(ckd_counts.index)), labels=['Non-Damaged Cells (Healthy)', 'Damaged Cells (CKD)'], rotation=0)
-plt.show()
+model = RandomForestClassifier(n_estimators = 20)
+model.fit(X_train, y_train)
+
+from sklearn.metrics import confusion_matrix, accuracy_score
+
+confusion_matrix(y_test, model.predict(X_test))
+
+print(f"Accuracy is {round(accuracy_score(y_test, model.predict(X_test))*100, 2)}%")
+
+input_data = []
+for column in X.columns:
+    value = input(f"Enter value for {column}: ")
+    input_data.append(float(value))
+
+input_array = np.array(input_data).reshape(1, -1)
+prediction = model.predict(input_array)
+
+if prediction[0] == 1:
+    print("The person has kidney disease.")
+else:
+    print("The person does not have kidney disease.")
+
+import os
+import pickle
+import joblib
+
+# Save using pickle
+with open('kidney_model.pkl', 'wb') as file:
+    pickle.dump(model, file)
+
+# Save using joblib
+joblib.dump(model, 'kidney_model_joblib.pkl')
+
+print("Model saved successfully using both pickle and joblib!")
+
+# Loading with pickle
+with open('kidney_model.pkl', 'rb') as file:
+    loaded_model = pickle.load(file)
+
+# Loading with joblib
+loaded_model = joblib.load('kidney_model_joblib.pkl')
+print(loaded_model)
+
 ```
 
 
