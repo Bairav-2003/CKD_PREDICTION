@@ -303,7 +303,11 @@ print("Model saved successfully!")
 ## for cnn
 ![project 2](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/cnn_output.png)
 
-
+## webpage output
+![project 2](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/cnn_output.png)
+![project 2](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/cnn_output.png)
+![project 2](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/cnn_output.png)
+![project 2](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/cnn_output.png)
 
 ## Result
 
