@@ -182,7 +182,7 @@ print(loaded_model)
 
 ## Result
 
-We developed a machine learning model that have acheived 98% accuracy using Random forest algorithm and also distribute the damaged and undamaged cells by visualzation graph using python.
+We developed a machine learning model that have acheived 98% accuracy using Random forest algorithm and also distribute the damaged and undamaged cells by visualzation graph using python and then we also classify the disease in the kindney using cnn.
 
 
 
