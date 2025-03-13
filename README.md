@@ -312,7 +312,7 @@ print("Model saved successfully!")
 ![project 2](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/Screenshot%202025-03-13%20155003.png)
 
 
-![project 2]()
+![project 2](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/Screenshot%202025-03-13%20155023.png)
 
 ## Result
 
