@@ -1,7 +1,7 @@
 # CKD_PREDICTION
 
 
-## Code
+## Code for ckd_prediction
 
 ```py
 import numpy as np
@@ -170,14 +170,139 @@ loaded_model = joblib.load('kidney_model_joblib.pkl')
 print(loaded_model)
 
 ```
+## Code for classification
+```py
+import numpy as np
+import pandas as pd
+from pathlib import Path
+import matplotlib.pyplot as plt
+import seaborn as sns
+from skimage.io import imread
+import cv2
+from pathlib import Path
+sns.set()
 
+data_dir = Path(r'C:\Users\makes\Desktop\CT-KIDNEY-DATASET-Normal-Cyst-Tumor-Stone')
+train_dir = data_dir
+
+# Get the path to the normal and pneumonia sub-directories
+Normal_Cases_dir = train_dir / 'Normal'
+Cyst_Cases_dir = train_dir / 'Cyst'
+Stone_Cases_dir = train_dir / 'Stone'
+Tumor_Cases_dir = train_dir / 'Tumor'
+
+# Getting the list of all the images
+Normal_Cases = Normal_Cases_dir.glob('*.jpg')
+Cyst_Cases = Cyst_Cases_dir.glob('*.jpg')
+Stone_Cases = Stone_Cases_dir.glob('*.jpg')
+Tumor_Cases = Tumor_Cases_dir.glob('*.jpg')
+
+# An empty list for inserting data into this list in (image_path, Label) format
+train_data = []
+
+
+# Labeling the Cyst case as 0
+for img in Cyst_Cases:
+    train_data.append((img, 0))
+
+# Labeling the Normal case as 1
+for img in Normal_Cases:
+    train_data.append((img, 1))
+
+# Labeling the Stone case as 2
+for img in Stone_Cases:
+    train_data.append((img, 2))
+
+# Labeling the Tumor case as 3
+for img in Tumor_Cases:
+    train_data.append((img, 3))
+
+# Creating a DataFrame
+train_df = pd.DataFrame(train_data, columns=['image', 'label'])
+
+print(train_df.head())
+
+# Visualizing the count of each class
+plt.figure(figsize=(6, 4))
+sns.countplot(x=train_df['label'])
+plt.xlabel("Condition")
+plt.ylabel("Number of Images")
+plt.title("Distribution of Kidney Conditions in Dataset")
+plt.show()
+
+# Load and preprocess images
+def preprocess_image(image_path):
+    img = imread(str(image_path))
+    img = cv2.resize(img, (150, 150))  # Resize images to 150x150
+    img = img / 255.0  # Normalize pixel values
+    return img
+
+# Apply preprocessing
+train_df['processed_image'] = train_df['image'].apply(preprocess_image)
+
+# Splitting the dataset
+from sklearn.model_selection import train_test_split
+
+X = np.array(train_df['processed_image'].tolist())
+y = np.array(train_df['label'].tolist())
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Reshaping for CNN input
+X_train = X_train.reshape(-1, 150, 150, 3)
+X_test = X_test.reshape(-1, 150, 150, 3)
+
+# Building CNN Model
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)),
+    MaxPooling2D((2, 2)),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(4, activation='softmax')
+])
+
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+# Training the model
+history = model.fit(X_train, y_train, epochs=10, validation_data=(X_test, y_test))
+
+# Evaluating the model
+loss, accuracy = model.evaluate(X_test, y_test)
+print(f'Accuracy: {accuracy * 100:.2f}%')
+
+# Plot Training History
+plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.title('Training vs Validation Accuracy')
+plt.show()
+
+# Save model
+model.save('kidney_cnn_model.h5')
+print("Model saved successfully!")
+
+```
 
 ## Output
-
+## for Randomforest
 ![project 1](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/xboostout1.png)
 
 
 ![project 2](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/xboostoutput2.png)
+![project 3](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/xboostoutput2.p)
+
+## for cnn
+![project 2](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/xboostoutput2.p)
+
 
 
 ## Result
