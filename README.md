@@ -298,10 +298,10 @@ print("Model saved successfully!")
 
 
 ![project 2](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/xboostoutput2.png)
-![project 3](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/xboostoutput2.p)
+![project 3](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/randomoutput.png)
 
 ## for cnn
-![project 2](https://github.com/Bairav-2003/CKD_PREDICTION/blob/main/xboostoutput2.p)
+![project 2]()
 
 
 
